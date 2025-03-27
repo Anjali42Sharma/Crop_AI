@@ -1,0 +1,389 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Chatbot for Farmers{% endblock %}
+
+{% block content %}
+<style>
+    .container {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-top: 20px;
+    }
+
+    .chatbox {
+        width: 600px;
+        height: 65vh;
+        background: #E6EDF5;
+        border-radius: 20px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        background-size: cover;
+        background-position: center;
+    }
+
+    .dark-mode .chatbox {
+        background: #333;
+        color: white;
+    }
+
+    .chat-header {
+        text-align: center;
+        font-size: 20px;
+        font-weight: bold;
+        color: #555;
+    }
+
+    .dark-mode .chat-header {
+        color: white;
+    }
+
+    .chat-area {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .message {
+        margin: 10px 0;
+        padding: 10px;
+        border-radius: 10px;
+        max-width: 80%;
+    }
+
+    .user {
+        background-color: #90EE90; /* Light green in light mode */
+        align-self: flex-end;
+        color: black;
+        padding: 8px 12px;
+        border-radius: 12px;
+        margin: 5px;
+        display: inline-block;
+        max-width: 80%;
+        word-wrap: break-word;
+    }
+
+    .dark-mode .user {
+        background-color: #666; /* Darker background in dark mode */
+        color: white;
+    }
+
+    .ai {
+        background-color: #515050;
+        color: white;
+        align-self: flex-start;
+        animation: bounceZoom 0.6s ease-out; /* Apply the animation */
+    }
+
+    .dark-mode .ai {
+        background-color: #666; /* Darker background in dark mode */
+        color: white;
+    }
+
+    .chat-input {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px 0;
+    }
+
+    input {
+        flex-grow: 1;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    input:focus {
+        border-color: #90EE90; /* Highlight input on focus */
+        box-shadow: 0 0 8px rgba(144, 238, 144, 0.5); /* Add glow effect on focus */
+    }
+
+    .dark-mode input {
+        background-color: #444;
+        color: white;
+        border: 1px solid #666;
+    }
+
+    .dark-mode input:focus {
+        border-color: #7CCD7C; /* Highlight input on focus in dark mode */
+        box-shadow: 0 0 8px rgba(124, 205, 124, 0.5); /* Add glow effect on focus in dark mode */
+    }
+
+    button {
+        padding: 10px;
+        background-color: #90EE90;
+        color: black;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    }
+
+    button:hover {
+        transform: scale(1.05); /* Slightly scale up on hover */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow on hover */
+        background-color: #7CCD7C; /* Slightly darker green on hover */
+    }
+
+    button:active {
+        transform: scale(0.95); /* Slightly scale down on click */
+    }
+
+    .dark-mode button {
+        background-color: #666;
+        color: white;
+    }
+
+    .dark-mode button:hover {
+        background-color: #555; /* Slightly darker gray on hover in dark mode */
+    }
+
+    /* Suggestions Box */
+    .suggestions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .suggestions button {
+        padding: 8px 12px;
+        background: #90EE90;
+        color: black;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    }
+
+    .suggestions button:hover {
+        transform: scale(1.05); /* Slightly scale up on hover */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow on hover */
+        background-color: #7CCD7C; /* Slightly darker green on hover */
+    }
+
+    .suggestions button:active {
+        transform: scale(0.95); /* Slightly scale down on click */
+    }
+
+    .dark-mode .suggestions button {
+        background-color: #666;
+        color: white;
+    }
+
+    .dark-mode .suggestions button:hover {
+        background-color: #555; /* Slightly darker gray on hover in dark mode */
+    }
+
+    h1 {
+        text-align: center;
+        top: 10px;
+    }
+
+    /* Thinking Animation */
+    .thinking {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin: 10px 0;
+    }
+
+    .thinking span {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background-color: #515050;
+        border-radius: 50%;
+        animation: bounce 1.4s infinite ease-in-out;
+    }
+
+    .thinking span:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .thinking span:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+
+    @keyframes bounce {
+        0%, 80%, 100% {
+            transform: translateY(0);
+        }
+        40% {
+            transform: translateY(-10px);
+        }
+    }
+
+    /* Bounce and Zoom Animation */
+    @keyframes bounceZoom {
+        0% {
+            transform: scale(0.5) translateY(20px);
+            opacity: 0;
+        }
+        50% {
+            transform: scale(1.1) translateY(-10px);
+            opacity: 1;
+        }
+        100% {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+    }
+</style>
+
+<h1>What's on your mind?</h1>
+<div class="container">
+    <div class="chatbox">
+        <div class="chat-header">
+            <div class="h2-box">
+                <!-- Optional content here -->
+            </div>
+        </div>
+        <div class="chat-area" id="chat"></div>
+        <div class="chat-input">
+            <!-- Suggestions Box -->
+            <div class="suggestions" id="suggestions"></div>
+            <!-- Chat Input -->
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="user_input" placeholder="Ask your queries here....">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const chatArea = document.getElementById("chat");
+    const userInput = document.getElementById("user_input");
+    const suggestionsDiv = document.getElementById("suggestions");
+
+    function sendMessage() {
+        let message = userInput.value.trim();
+        if (message) {
+            displayMessage(message, "user");
+            userInput.value = "";
+
+            // Clear suggestions whenever a message is sent
+            suggestionsDiv.innerHTML = "";
+
+            // Show thinking animation
+            const thinkingDiv = document.createElement("div");
+            thinkingDiv.classList.add("thinking");
+            thinkingDiv.innerHTML = `
+                <span></span>
+                <span></span>
+                <span></span>
+            `;
+            chatArea.appendChild(thinkingDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+
+            fetch("/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Remove thinking animation
+                chatArea.removeChild(thinkingDiv);
+                displayMessage(data.response, "ai");
+            })
+            .catch(error => {
+                // Remove thinking animation
+                chatArea.removeChild(thinkingDiv);
+                displayMessage("Error: " + error, "ai");
+            });
+        }
+    }
+
+    function displayMessage(text, sender) {
+        let msgDiv = document.createElement("div");
+        msgDiv.classList.add("message", sender);
+        msgDiv.textContent = text;
+
+        // Add the animation class only for bot messages
+        if (sender === "ai") {
+            msgDiv.style.animation = "bounceZoom 0.6s ease-out";
+        }
+
+        chatArea.appendChild(msgDiv);
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    function sendQuickMessage(message) {
+        userInput.value = message;
+        sendMessage(); // This will also clear the suggestions
+    }
+
+    const questions = [
+        "Best crops for summer", "How to improve soil quality", "Weather forecast for farming",
+        "How to prevent crop diseases?", "Best organic fertilizers", "Soil pH and crop suitability",
+        "How to increase yield?", "Pest control methods", "Rainwater harvesting for farms",
+        "Best irrigation techniques", "Drought-resistant crops", "Composting benefits",
+        "Greenhouse farming basics", "Vertical farming tips", "How to prevent soil erosion?",
+        "How to store grains properly?", "Best cover crops", "Mulching techniques",
+        "Importance of crop rotation", "Best practices for dairy farming",
+        "How to test soil fertility?", "Managing farm expenses", "Best livestock feed options",
+        "Sustainable farming methods", "Organic vs chemical fertilizers",
+        "How to manage farm waste?", "Smart farming technology", "Benefits of intercropping",
+        "How to identify plant diseases?", "When to plant seasonal crops?",
+        "Effective pest management strategies", "How to conserve soil moisture?",
+        "Best farm tools for small-scale farming", "How to prevent weed growth?",
+        "Most profitable crops to grow", "How to prepare land for planting?",
+        "Best tree species for agroforestry", "Hydroponic farming basics",
+        "Solar energy for farms", "Tips for growing high-value crops",
+        "Natural ways to control pests", "Best farm management practices",
+        "Crop rotation schedules", "How to improve farm productivity?",
+        "Weather patterns and farming", "Best water conservation techniques",
+        "How to detect nutrient deficiencies?", "Organic farming certification process",
+        "Market trends in agriculture", "How to get farm subsidies?",
+        "How to export agricultural products?", "How to grow vegetables at home?",
+        "How to maintain farm machinery?", "Best agrochemicals for crops",
+        "Effects of climate change on farming", "Growing medicinal plants",
+        "How to manage farm labor?", "How to grow fruits organically?",
+        "Best aquaponics practices", "How to control fungal infections on crops?",
+        "Best beekeeping techniques", "How to improve soil organic matter?",
+        "Techniques for growing mushrooms", "How to reduce farming costs?",
+        "How to attract pollinators?", "Best seed varieties for high yield",
+        "How to ensure food security?"
+    ];
+
+    function displayRandomSuggestions() {
+        suggestionsDiv.innerHTML = "";
+        let randomQuestions = questions.sort(() => 0.5 - Math.random()).slice(0, 6); // Show 6 random suggestions
+
+        randomQuestions.forEach((question) => {
+            let button = document.createElement("button");
+            button.textContent = question;
+            button.onclick = () => sendQuickMessage(question);
+            suggestionsDiv.appendChild(button);
+        });
+    }
+
+    // Display suggestions when the page loads
+    window.onload = displayRandomSuggestions;
+
+    // Clear suggestions when the user starts typing
+    userInput.addEventListener("input", () => {
+        if (userInput.value.trim() !== "") {
+            suggestionsDiv.innerHTML = "";
+        } else {
+            displayRandomSuggestions(); // Show suggestions again if input is empty
+        }
+    });
+
+    // Enter-to-send functionality
+    userInput.addEventListener("keypress", (event) => {
+        if (event.key === "Enter") {
+            sendMessage();
+        }
+    });
+</script>
+{% endblock %}
